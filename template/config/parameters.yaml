@@ -1,0 +1,7 @@
+parameters:
+  api_name: "LyraJS API"
+  api_version: "1.0.0"
+  api_host: "%env(HOST)%"
+  api_port: "%env(PORT)%"
+  api_env: "%env(NODE_ENV)%"
+  api_timezone: "%env(TZ)%"

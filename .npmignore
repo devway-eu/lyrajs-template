@@ -1,0 +1,29 @@
+# npmignore file for create-lyrajs
+# Development files
+.git/
+.gitignore
+*.log
+npm-debug.log*
+.npm
+node_modules/
+
+# Documentation we don't need in npm package
+*.md
+!README.md
+CONTRIBUTING.md
+CLA.md
+SECURITY.md
+
+# Keep template's .gitignore for the scaffolded project
+!template/.gitignore
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temp files
+.DS_Store
+Thumbs.db

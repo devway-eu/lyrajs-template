@@ -1,0 +1,22 @@
+{
+  "name": "create-lyrajs",
+  "version": "1.0.0",
+  "description": "CLI tool to create new LyraJS projects",
+  "keywords": ["create", "lyrajs", "framework", "api", "typescript", "cli", "scaffold"],
+  "author": "Matthieu Fergola & Anthony Dewitte",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devway-eu/lyrajs-template"
+  },
+  "bin": {
+    "create-lyrajs": "cli.js"
+  },
+  "type": "module",
+  "files": [
+    "cli.js",
+    "src",
+    "template",
+    "template/.gitignore"
+  ]
+}

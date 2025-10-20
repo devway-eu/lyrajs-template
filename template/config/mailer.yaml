@@ -1,0 +1,6 @@
+mailer:
+  host: "%env(MAILER_HOST)%"
+  port: "%env(MAILER_PORT)%"
+  username: "%env(MAILER_USERNAME)%"
+  password: "%env(MAILER_PASSWORD)%"
+  sender: "%env(MAILER_SENDER)%"
