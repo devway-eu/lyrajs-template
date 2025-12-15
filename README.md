@@ -1,6 +1,6 @@
 # create-lyrajs
 
-The official project template and scaffolding tool for LyraJS - a lightweight TypeScript framework for building robust APIs.
+The official project template and scaffolding tool for LyraJS, a lightweight TypeScript framework for building robust APIs.
 
 ## About
 
