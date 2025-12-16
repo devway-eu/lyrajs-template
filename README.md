@@ -4,6 +4,7 @@
 [![CLA Assistant](https://cla-assistant.io/readme/badge/devway-eu/lyrajs-template)](https://cla-assistant.io/devway-eu/lyrajs-template)
 [![docs](https://img.shields.io/badge/docs-read-green)](https://lyrajs.dev)
 [![Discord](https://img.shields.io/discord/1449345012604342427?label=discord&logo=discord&logoColor=white)](https://discord.gg/cWvUh8pQNU)
+![License](https://img.shields.io/github/license/devway-eu/lyrajs-template)
 
 The official project template and scaffolding tool for LyraJS, a lightweight TypeScript framework for building robust APIs.
 

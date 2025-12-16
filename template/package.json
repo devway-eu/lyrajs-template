@@ -4,10 +4,10 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
-    "maestro": "npx tsx node_modules/@lyra-js/core/bin/maestro.js"
+    "maestro": "maestro"
   },
   "dependencies": {
-    "@lyra-js/core": "^1.0.10",
+    "@lyra-js/core": "^1.0.11",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
