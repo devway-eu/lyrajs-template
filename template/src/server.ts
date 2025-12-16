@@ -5,7 +5,7 @@ import express from "express"
 import * as process from "node:process"
 
 import { router } from "@app/router"
-import { Config, LyraConsole, accessMiddleware, errorHandler, httpRequestMiddleware } from "@lyrajs/core"
+import { Config, LyraConsole, accessMiddleware, errorHandler, httpRequestMiddleware } from "@lyra-js/core"
 
 dotenv.config()
 

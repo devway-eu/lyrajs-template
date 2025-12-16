@@ -1,4 +1,4 @@
-import { Column, Entity, Table } from "@lyrajs/core"
+import { Column, Entity, Table } from "@lyra-js/core"
 
 @Table()
 export class User extends Entity<User> {

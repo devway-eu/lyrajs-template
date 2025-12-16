@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express"
-import { Validator, ValidationException } from "@lyrajs/core"
+import { Validator, ValidationException } from "@lyra-js/core"
 import { User } from "@entity/User"
 import { userRepository } from "@repository/UserRepository"
 

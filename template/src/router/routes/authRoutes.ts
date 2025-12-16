@@ -1,6 +1,6 @@
 import { AuthController } from "@controller/AuthController"
 import { Router } from "express"
-import { rateLimiter } from "@lyrajs/core"
+import { rateLimiter } from "@lyra-js/core"
 
 export const authRoutes = Router()
 

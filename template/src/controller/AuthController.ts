@@ -2,8 +2,8 @@ import bcrypt from "bcrypt"
 import { NextFunction, Request, Response } from "express"
 import jwt from "jsonwebtoken"
 
-import { SecurityConfig } from "@lyrajs/core"
-import { AuthenticatedRequest, UnauthorizedException, Validator } from "@lyrajs/core"
+import { SecurityConfig } from "@lyra-js/core"
+import { AuthenticatedRequest, UnauthorizedException, Validator } from "@lyra-js/core"
 import { User } from "@entity/User"
 import { userRepository } from "@repository/UserRepository"
 
