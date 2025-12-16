@@ -5,12 +5,12 @@ import express from "express"
 import * as process from "node:process"
 
 import { router } from "@app/router"
-import { Config, LyraConsole, accessMiddleware, errorHandler, httpRequestMiddleware } from "@lyra-js/core"
+import { Config, SecurityConfig, LyraConsole, accessMiddleware, errorHandler, httpRequestMiddleware } from "@lyra-js/core"
 
 dotenv.config()
 
 const params = new Config().get("parameters")
-const securityConfig = new Config().get("security")
+const securityConfig = new SecurityConfig().getConfig()
 
 const port = process.env.PORT
 const app = express()
