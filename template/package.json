@@ -20,7 +20,7 @@
     "yaml": "^2.8.0"
   },
   "devDependencies": {
-    "@lyrajs/core": "^1.0.0",
+    "@lyra-js/core": "^1.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.18",
