@@ -1,0 +1,96 @@
+name: Bug Report
+description: Report a bug in create-lyrajs template
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug in the LyraJS project template!
+
+        Please fill out the sections below to help us understand and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: What happened when creating or using the template?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Run 'npm create lyrajs' or 'npx create-lyrajs'
+        2. Enter project name 'my-project'
+        3. Choose to install dependencies
+        4. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: The project should be created successfully
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: Error message or unexpected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Your environment details
+      placeholder: |
+        - create-lyrajs version: 1.0.0
+        - Node.js version: 18.17.0
+        - npm version: 9.6.7
+        - OS: Windows 11 / macOS 13 / Ubuntu 22.04
+        - Shell: bash / zsh / PowerShell / cmd
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs
+      description: Paste any relevant error logs or output
+      render: shell
+      placeholder: |
+        Paste error logs here...
+
+  - type: dropdown
+    id: issue-area
+    attributes:
+      label: Issue Area
+      description: Which part of the template is affected?
+      options:
+        - Project scaffolding / file copying
+        - Dependency installation
+        - .env file creation
+        - Template files (entities, controllers, etc.)
+        - CLI prompts and interaction
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem (screenshots, network issues, etc.)

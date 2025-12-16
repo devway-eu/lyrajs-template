@@ -1,0 +1,75 @@
+name: Feature Request
+description: Suggest a new feature for create-lyrajs template
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature for the LyraJS template! 🎉
+
+        Please describe your idea to help us improve the project scaffolding experience.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem would this feature solve?
+      placeholder: It would be helpful if the template included... / I wish I could...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature to work?
+      placeholder: |
+        When running 'npm create lyrajs', I would like...
+
+        Example:
+        - Add option to choose database (MySQL, PostgreSQL)
+        - Include Docker configuration
+        - Add example tests
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternatives or workarounds have you considered?
+      placeholder: I've tried manually adding... / Another approach could be...
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the template would this feature affect?
+      options:
+        - CLI prompts and options
+        - Template files structure
+        - Default configuration
+        - Dependencies included
+        - Documentation / README
+        - Scripts / package.json
+        - Example code (entities, controllers, etc.)
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: willingness
+    attributes:
+      label: Contribution
+      description: Would you be willing to contribute this feature?
+      options:
+        - label: I'm willing to submit a pull request to implement this feature
+          required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context, examples, or references
+      placeholder: Similar features in other CLIs, screenshots, etc.
