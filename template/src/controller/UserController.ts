@@ -89,6 +89,7 @@ export class UserController {
       const user = await userRepository.find(data.id)
       if (!user) res.status(404).json({ message: "User not found" })
       if (user && data.password) data.password = await bcrypt.hash(data.password, 10);
+      user.updated_at = new Date()
       if (user) await userRepository.save(data)
       res.status(200).json({ message: "Users updated successfully" })
     } catch (error) {

@@ -22,7 +22,6 @@ app.use(express.urlencoded({ limit: securityConfig.limits.request_max_size || "1
 app.use(
   cors({
     origin: `${process.env.CLIENT_APP_URL}`,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
     credentials: true
   })
 )

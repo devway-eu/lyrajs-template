@@ -1,9 +1,10 @@
+import { AccessControl, ProtectedRouteType, SecurityConfig } from "@lyra-js/core"
+import { AuthenticatedRequest, UnauthorizedException, Validator } from "@lyra-js/core"
 import bcrypt from "bcrypt"
 import { NextFunction, Request, Response } from "express"
 import jwt from "jsonwebtoken"
+import md5 from "md5"
 
-import { SecurityConfig } from "@lyra-js/core"
-import { AuthenticatedRequest, UnauthorizedException, Validator } from "@lyra-js/core"
 import { User } from "@entity/User"
 import { userRepository } from "@repository/UserRepository"
 
@@ -44,7 +45,7 @@ export class AuthController {
       user.lastname = lastname
       user.email = email
       user.password = hashedPassword
-      user.role = 'ROLE_USER'
+      user.role = "ROLE_USER"
 
       await userRepository.save(user)
 
@@ -77,10 +78,12 @@ export class AuthController {
         expiresIn: securityConfig.jwt.token_expiration
       })
 
-      user.refresh_token = jwt.sign({ id: user.id }, securityConfig.jwt.secret_key_refresh as string, {
+      const refreshToken = jwt.sign({ id: user.id }, securityConfig.jwt.secret_key_refresh as string, {
         algorithm: securityConfig.jwt.algorithm as string,
         expiresIn: securityConfig.jwt.refresh_token_expiration
       })
+
+      user.refresh_token = md5(refreshToken)
 
       await userRepository.save(user)
 
@@ -92,9 +95,18 @@ export class AuthController {
         partitioned: false
       })
 
-      delete user.password
+      res.cookie("RefreshToken", refreshToken, {
+        sameSite: "Lax",
+        httpOnly: true,
+        secure: process.env.ENV === "production",
+        maxAge: 1000 * 60 * 60 * 24,
+        partitioned: false
+      })
 
-      res.status(200).json({ message: "User authenticated in successfully", user, token })
+      delete user.password
+      delete user.refresh_token
+
+      res.status(200).json({ message: "User authenticated in successfully", user, token, refreshToken })
     } catch (error) {
       next(error)
     }
@@ -119,6 +131,72 @@ export class AuthController {
 
   static signOut = async (_req: Request, res: Response) => {
     res.clearCookie("Token")
+    res.clearCookie("RefreshToken")
     res.status(200).json({ message: "Unauthenticated successfully" })
+  }
+
+  static updateProfile = async (req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) => {
+    try {
+      const { data }: { data: User } = req.body
+      const user = req.user as User
+      if (!user) throw new UnauthorizedException()
+      if (data?.id && data.id !== user.id) throw new UnauthorizedException()
+      if (data.role) delete data.role
+      if (data.created_at) delete data.created_at
+      if (data.refresh_token) delete data.refresh_token
+      data.updated_at = new Date()
+      if (user && data.password) data.password = await bcrypt.hash(data.password, 10)
+      if (user) await userRepository.save(data)
+      res.status(200).json({ message: "Users updated successfully" })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const securityConfig = new SecurityConfig().getConfig()
+      const refreshToken = req.cookies.RefreshToken
+      const decoded = await AccessControl.decodeToken(refreshToken)
+
+      if (!decoded || !decoded.id) throw new UnauthorizedException("Invalid refresh token")
+
+      const user = await userRepository.find(decoded.id)
+
+      if (!user || md5(refreshToken) !== user.refresh_token) throw new UnauthorizedException("Invalid refresh token")
+
+      AccessControl.checkRefreshTokenValid(refreshToken)
+
+      const newToken = await AccessControl.getNewToken(user)
+
+      await userRepository.save({ ...user })
+
+      res.cookie("Token", newToken, {
+        sameSite: "lax",
+        httpOnly: true,
+        secure: process.env.ENV === "production",
+        maxAge: securityConfig.jwt.token_expiration
+      })
+
+      delete user.password
+      delete user.refresh_token
+
+      res.status(200).json({ message: "User authenticated in successfully", user, refreshToken })
+    } catch (_refreshError) {
+      return res.redirect(securityConfig.auth_routes.sign_out)
+    }
+  }
+
+  static removeUser = async (req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) => {
+    const user = req.user
+
+    if (!user) throw new UnauthorizedException()
+
+    await userRepository.delete(user.id)
+
+    res.clearCookie("Token")
+    res.clearCookie("RefreshToken")
+
+    res.status(200).json({ message: "User deleted successfully" })
   }
 }
