@@ -6,6 +6,8 @@
 npm-debug.log*
 .npm
 node_modules/
+package-lock.json
+template/package-lock.json
 
 # Documentation we don't need in npm package
 *.md
