@@ -2,11 +2,12 @@ import { NextFunction, Request, Response } from "express"
 import { Validator, ValidationException } from "@lyra-js/core"
 import { User } from "@entity/User"
 import { userRepository } from "@repository/UserRepository"
+import bcrypt from "bcrypt";
 
 export class UserController {
   static list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const users = await userRepository.findAll().map( (user: User) => {
+      const users = (await userRepository.findAll()).map( (user: User) => {
           delete user.password
           return user
       } )
@@ -55,7 +56,25 @@ export class UserController {
         new ValidationException("Password is to weak. I must be 10 characters long, including at least 1 lowercase, 1 uppercase, 1 number and 1 special character.")
       }
 
-      data.role = "ROLE_USER";
+      const isEmailUsed = await userRepository.findOneBy({ data.email })
+
+      if (isEmailUsed) {
+        throw new Error("Email already in use")
+      }
+
+      if (!Validator.isPasswordValid(data.password)) {
+        throw new Error("Invalid password")
+      }
+
+      const user = new User()
+      const hashedPassword = await bcrypt.hash(data.password, 10)
+
+      user.username = data.username
+      user.firstname = data.firstname
+      user.lastname = data.lastname
+      user.email = data.email
+      user.password = hashedPassword
+      user.role = 'ROLE_USER'
 
       await userRepository.save(data)
       res.status(201).json({ message: "User created successfully" })
@@ -69,6 +88,7 @@ export class UserController {
       const { data }: {data: User} = req.body
       const user = await userRepository.find(data.id)
       if (!user) res.status(404).json({ message: "User not found" })
+      if (user && data.password) data.password = await bcrypt.hash(data.password, 10);
       if (user) await userRepository.save(data)
       res.status(200).json({ message: "Users updated successfully" })
     } catch (error) {

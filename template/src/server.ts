@@ -15,7 +15,7 @@ const securityConfig = new SecurityConfig().getConfig()
 const port = process.env.PORT
 const app = express()
 
-app.set("trust proxy", true)
+app.set("trust proxy", false)
 app.use(cookieParser())
 app.use(express.json({ limit: securityConfig.limits.request_max_size || "10mb" }))
 app.use(express.urlencoded({ limit: securityConfig.limits.request_max_size || "10mb", extended: true }))

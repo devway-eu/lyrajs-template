@@ -5,6 +5,6 @@ export const userRoutes = Router()
 
 userRoutes.get("/all", UserController.list)
 userRoutes.get("/:id", UserController.read)
-userRoutes.put("/", UserController.create)
+userRoutes.post("/", UserController.create)
 userRoutes.patch("/:id", UserController.update)
 userRoutes.delete("/:id", UserController.delete)
