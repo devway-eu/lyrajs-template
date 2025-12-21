@@ -44,4 +44,4 @@ You understand that the decision to include Your Contribution is entirely at the
 
 For questions, contact: [matthieu@dev-way.eu]
 
-*Last updated: 2025*
+*Last updated: 2025* 
