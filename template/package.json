@@ -7,7 +7,7 @@
     "maestro": "maestro"
   },
   "dependencies": {
-    "@lyra-js/core": "^1.0.21",
+    "@lyra-js/core": "^1.0.22",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

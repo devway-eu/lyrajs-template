@@ -1,4 +1,4 @@
-import { AccessControl, ProtectedRouteType, SecurityConfig } from "@lyra-js/core"
+import { AccessControl, SecurityConfig } from "@lyra-js/core"
 import { AuthenticatedRequest, UnauthorizedException, Validator } from "@lyra-js/core"
 import bcrypt from "bcrypt"
 import { NextFunction, Request, Response } from "express"
