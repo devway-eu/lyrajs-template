@@ -1,6 +1,6 @@
 import { UserController } from "@controller/UserController"
 import { Router } from "express"
-import { isAdmin } from "@lyrajs/core"
+import { isAdmin } from "@lyra-js/core"
 
 export const userRoutes = Router()
 

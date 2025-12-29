@@ -25,7 +25,7 @@ Our CLI includes :
 ## Installation
 
 ```bash
-    git clone https://github.com/devway-eu/LyraJS.git
+    cd <YOUR_PROJECT_NAME>
 ```
 
 ```bash

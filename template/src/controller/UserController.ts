@@ -8,7 +8,7 @@ export class UserController {
   static list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const users = (await userRepository.findAll()).map( (user: User) => {
-          delete user.password
+          delete user?.password
           return user
       } )
       res.status(200).json({ message: "Users fetched successfully", users })
@@ -56,7 +56,7 @@ export class UserController {
         new ValidationException("Password is to weak. I must be 10 characters long, including at least 1 lowercase, 1 uppercase, 1 number and 1 special character.")
       }
 
-      const isEmailUsed = await userRepository.findOneBy({ data.email })
+      const isEmailUsed = await userRepository.findOneBy({ email: data.email })
 
       if (isEmailUsed) {
         throw new Error("Email already in use")
