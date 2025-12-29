@@ -91,7 +91,7 @@ export class AuthController {
         sameSite: "Lax",
         httpOnly: true,
         secure: process.env.ENV === "production",
-        maxAge: 1000 * 60 * 60 * 24,
+        maxAge: securityConfig.jwt.token_expiration * 1000,
         partitioned: false
       })
 
@@ -99,7 +99,7 @@ export class AuthController {
         sameSite: "Lax",
         httpOnly: true,
         secure: process.env.ENV === "production",
-        maxAge: 1000 * 60 * 60 * 24,
+        maxAge: securityConfig.jwt.refresh_token_expiration * 1000,
         partitioned: false
       })
 
