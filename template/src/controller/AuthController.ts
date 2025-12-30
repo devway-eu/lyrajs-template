@@ -177,7 +177,7 @@ export class AuthController {
         sameSite: "lax",
         httpOnly: true,
         secure: process.env.ENV === "production",
-        maxAge: securityConfig.jwt.token_expiration,
+        maxAge: securityConfig.jwt.token_expiration * 1000,
         partitioned: false
       })
 

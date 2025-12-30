@@ -6,7 +6,7 @@ import { User } from "@entity/User"
 import { userRepository } from "@repository/UserRepository"
 
 export class UserController {
-  static list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  static list = async (req: AuthenticatedRequest<Request>, res: Response, next: NextFunction): Promise<void> => {
     try {
       const users = (await userRepository.findAll()).map((user: User) => {
         delete user?.password
@@ -18,7 +18,7 @@ export class UserController {
     }
   }
 
-  static read = async (req: Request, res: Response, next: NextFunction) => {
+  static read = async (req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params
       const user = await userRepository.find(id)
@@ -29,7 +29,7 @@ export class UserController {
     }
   }
 
-  static create = async (req: Request, res: Response, next: NextFunction) => {
+  static create = async (req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) => {
     try {
       const { data }: { data: User } = req.body
 

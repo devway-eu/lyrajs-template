@@ -9,6 +9,8 @@ import { Config, SecurityConfig, LyraConsole, accessMiddleware, errorHandler, ht
 
 dotenv.config()
 
+process.env.TZ = process.env.TZ || "Europe/Paris"
+
 const params = new Config().get("parameters")
 const securityConfig = new SecurityConfig().getConfig()
 
