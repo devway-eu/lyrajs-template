@@ -83,11 +83,12 @@ export class UserController {
       const { data }: { data: User } = req.body
       const user = await userRepository.find(data.id)
       if (!user) res.status(404).json({ message: "User not found" })
-      delete user?.password
-      delete user?.email
-      user.updated_at = new Date()
+      if (!AccessControl.isOwner(req.user, user.id) && !AccessControl.hasRoleHigherThan(req.user, user.role)) throw new UnauthorizedException()
       if (AccessControl.hasRoleHigherThan(req.user, user.role)) delete user.role
-      if (user) await userRepository.save(data)
+      delete data?.password
+      delete data?.email
+      data.updated_at = new Date()
+      await userRepository.save(data)
       res.status(200).json({ message: "Users updated successfully" })
     } catch (error) {
       next(error)
