@@ -16,8 +16,6 @@ export class User extends Entity<User> {
   password: string = ""
   @Column({ type: "varchar", size: 255 })
   role: string = "ROLE_USER"
-  @Column({ type: "varchar", size: 255, nullable: true })
-  refresh_token: string | null = null
   @Column({ type: "timestamp" })
   created_at: string | Date | null = new Date()
   @Column({ type: "timestamp" })

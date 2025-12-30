@@ -83,8 +83,6 @@ export class AuthController {
         expiresIn: securityConfig.jwt.refresh_token_expiration
       })
 
-      user.refresh_token = md5(refreshToken)
-
       await userRepository.save(user)
 
       res.cookie("Token", token, {
@@ -104,7 +102,6 @@ export class AuthController {
       })
 
       delete user.password
-      delete user.refresh_token
 
       res.status(200).json({ message: "User authenticated in successfully", user, token, refreshToken })
     } catch (error) {
@@ -119,6 +116,7 @@ export class AuthController {
       if (!user) throw new UnauthorizedException()
 
       res.status(200).json({
+        id: user.id,
         firstname: user.firstname,
         lastname: user.lastname,
         email: user.email,
@@ -143,7 +141,6 @@ export class AuthController {
       if (data?.id && data.id !== user.id) throw new UnauthorizedException()
       if (data.role) delete data.role
       if (data.created_at) delete data.created_at
-      if (data.refresh_token) delete data.refresh_token
       data.updated_at = new Date()
       if (user && data.password) data.password = await bcrypt.hash(data.password, 10)
       if (user) await userRepository.save(data)
@@ -156,32 +153,37 @@ export class AuthController {
   static refreshToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const securityConfig = new SecurityConfig().getConfig()
-      const refreshToken = req.cookies.RefreshToken
+      let refreshToken = req.cookies.RefreshToken
+      if (!refreshToken) {
+        const authHeader = req.headers.authorization
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          refreshToken = authHeader.substring(7)
+        }
+      }
+
+      AccessControl.checkRefreshTokenValid(refreshToken)
+
       const decoded = await AccessControl.decodeToken(refreshToken)
 
       if (!decoded || !decoded.id) throw new UnauthorizedException("Invalid refresh token")
 
       const user = await userRepository.find(decoded.id)
 
-      if (!user || md5(refreshToken) !== user.refresh_token) throw new UnauthorizedException("Invalid refresh token")
+      if (!user) throw new UnauthorizedException("Invalid refresh token")
 
-      AccessControl.checkRefreshTokenValid(refreshToken)
+      const token = await AccessControl.getNewToken(user)
 
-      const newToken = await AccessControl.getNewToken(user)
-
-      await userRepository.save({ ...user })
-
-      res.cookie("Token", newToken, {
+      res.cookie("Token", token, {
         sameSite: "lax",
         httpOnly: true,
         secure: process.env.ENV === "production",
-        maxAge: securityConfig.jwt.token_expiration
+        maxAge: securityConfig.jwt.token_expiration,
+        partitioned: false
       })
 
       delete user.password
-      delete user.refresh_token
 
-      res.status(200).json({ message: "User authenticated in successfully", user, refreshToken })
+      res.status(200).json({ message: "User authenticated in successfully", user, token, refreshToken })
     } catch (_refreshError) {
       return res.redirect(securityConfig.auth_routes.sign_out)
     }
