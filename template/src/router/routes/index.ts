@@ -1,9 +1,7 @@
-import { Router } from "express"
+import { createRouter } from "@lyra-js/core"
 
-import { authRoutes } from "./authRoutes"
-import { userRoutes } from "./userRoutes"
+import { exampleRoutes } from "./exampleRoutes"
 
-export const routes = Router()
+export const routes = createRouter()
 
-routes.use("/auth", authRoutes)
-routes.use("/user", userRoutes)
+routes.use("/example", exampleRoutes)

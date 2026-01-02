@@ -1,9 +1,8 @@
-import bcrypt from "bcrypt"
+import { Container } from "@lyra-js/core"
 
 import { User } from "@entity/User"
-import { userRepository } from "@repository/UserRepository"
 
-export class AppFixtures {
+export class AppFixtures extends Container {
   private users = [
     {
       username: "Mithrandil",
@@ -34,7 +33,7 @@ export class AppFixtures {
 
   private loadUsers = async () => {
     for (const u of this.users) {
-      const hashedPassword = await bcrypt.hash(u.password, 10)
+      const hashedPassword = await this.bcrypt.hash(u.password, 10)
       const user = new User()
       user.username = u.username
       user.firstname = u.firstname
@@ -43,7 +42,7 @@ export class AppFixtures {
       user.password = hashedPassword
       user.created_at = new Date()
       user.updated_at = new Date()
-      await userRepository.save(user)
+      await this.userRepository.save(user)
     }
   }
 }

@@ -1,17 +1,27 @@
 import { AccessControl, SecurityConfig } from "@lyra-js/core"
-import { AuthenticatedRequest, UnauthorizedException, Validator } from "@lyra-js/core"
-import bcrypt from "bcrypt"
-import { NextFunction, Request, Response } from "express"
-import jwt from "jsonwebtoken"
-import md5 from "md5"
+import {
+  AuthenticatedRequest,
+  Controller,
+  Delete,
+  Get,
+  NextFunction,
+  Patch,
+  Post,
+  Request,
+  Response,
+  Route,
+  UnauthorizedException,
+  Validator
+} from "@lyra-js/core"
 
 import { User } from "@entity/User"
-import { userRepository } from "@repository/UserRepository"
 
 const securityConfig = new SecurityConfig().getConfig()
 
-export class AuthController {
-  static signUp = async (req: Request, res: Response, next: NextFunction) => {
+@Route({ path: "/auth" })
+export class AuthController extends Controller {
+  @Post({ path: "/sign-up" })
+  async signUp(req: Request, res: Response, next: NextFunction) {
     try {
       const { username, firstname, lastname, email, password } = req.body
 
@@ -27,7 +37,7 @@ export class AuthController {
         throw new Error("Invalid email")
       }
 
-      const isEmailUsed = await userRepository.findOneBy({ email })
+      const isEmailUsed = await this.userRepository.findOneBy({ email })
 
       if (isEmailUsed) {
         throw new Error("Email already in use")
@@ -38,7 +48,7 @@ export class AuthController {
       }
 
       const user = new User()
-      const hashedPassword = await bcrypt.hash(password, 10)
+      const hashedPassword = await this.bcrypt.hash(password, 10)
 
       user.username = username
       user.firstname = firstname
@@ -47,19 +57,19 @@ export class AuthController {
       user.password = hashedPassword
       user.role = "ROLE_USER"
 
-      await userRepository.save(user)
+      await this.userRepository.save(user)
 
-      const registeredUser = await userRepository.findOneBy({ email })
+      const registeredUser = await this.userRepository.findOneBy({ email })
+      const { password: _, ...userWithoutPassword } = registeredUser || {}
 
-      delete registeredUser?.password
-
-      res.status(201).json({ message: "User registered successfully", user: registeredUser })
+      res.status(201).json({ message: "User registered successfully", user: userWithoutPassword })
     } catch (error) {
       next(error)
     }
   }
 
-  static signIn = async (req: Request, res: Response, next: NextFunction) => {
+  @Post({ path: "/sign-in" })
+  async signIn(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body
 
@@ -67,23 +77,23 @@ export class AuthController {
         throw new Error("Missing required fields")
       }
 
-      const user = await userRepository.findOneBy({ email })
+      const user = await this.userRepository.findOneBy({ email })
 
-      if (!user || !(user && (await bcrypt.compare(password, user.password)))) {
+      if (!user || !(user && (await this.bcrypt.compare(password, user.password)))) {
         throw new Error("Invalid credentials")
       }
 
-      const token = jwt.sign({ id: user.id }, securityConfig.jwt.secret_key as string, {
+      const token = this.jwt.sign({ id: user.id }, securityConfig.jwt.secret_key as string, {
         algorithm: securityConfig.jwt.algorithm as string,
         expiresIn: securityConfig.jwt.token_expiration
       })
 
-      const refreshToken = jwt.sign({ id: user.id }, securityConfig.jwt.secret_key_refresh as string, {
+      const refreshToken = this.jwt.sign({ id: user.id }, securityConfig.jwt.secret_key_refresh as string, {
         algorithm: securityConfig.jwt.algorithm as string,
         expiresIn: securityConfig.jwt.refresh_token_expiration
       })
 
-      await userRepository.save(user)
+      await this.userRepository.save(user)
 
       res.cookie("Token", token, {
         sameSite: "Lax",
@@ -101,15 +111,18 @@ export class AuthController {
         partitioned: false
       })
 
-      delete user.password
+      const { password: _, ...userWithoutPassword } = user
 
-      res.status(200).json({ message: "User authenticated in successfully", user, token, refreshToken })
+      res
+        .status(200)
+        .json({ message: "User authenticated in successfully", user: userWithoutPassword, token, refreshToken })
     } catch (error) {
       next(error)
     }
   }
 
-  static getAuthenticatedUser = async (req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) => {
+  @Get({ path: "/user" })
+  async getAuthenticatedUser(req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) {
     try {
       const user = req.user as User
 
@@ -127,36 +140,48 @@ export class AuthController {
     }
   }
 
-  static signOut = async (_req: Request, res: Response) => {
+  @Get({ path: "/sign-out" })
+  async signOut(_req: Request, res: Response) {
     res.clearCookie("Token")
     res.clearCookie("RefreshToken")
     res.status(200).json({ message: "Unauthenticated successfully" })
   }
 
-  static updateProfile = async (req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) => {
+  @Patch({ path: "/update-account" })
+  async updateProfile(req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) {
     try {
       const { data }: { data: User } = req.body
       const user = req.user as User
       if (!user) throw new UnauthorizedException()
       if (data?.id && data.id !== user.id) throw new UnauthorizedException()
-      if (data.role) delete data.role
-      if (data.created_at) delete data.created_at
-      data.updated_at = new Date()
-      if (user && data.password) data.password = await bcrypt.hash(data.password, 10)
-      if (user) await userRepository.save(data)
+
+      // Remove protected fields
+      const { role, created_at, password, ...updateData } = data
+
+      // Hash password if provided
+      const hashedPassword = password ? await this.bcrypt.hash(password, 10) : undefined
+
+      const finalData = {
+        ...updateData,
+        ...(hashedPassword && { password: hashedPassword }),
+        updated_at: new Date()
+      }
+
+      if (user) await this.userRepository.save(finalData)
       res.status(200).json({ message: "Users updated successfully" })
     } catch (error) {
       next(error)
     }
   }
 
-  static refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+  @Get({ path: "/refresh-token" })
+  async refreshToken(req: Request, res: Response, _next: NextFunction) {
     try {
       const securityConfig = new SecurityConfig().getConfig()
       let refreshToken = req.cookies.RefreshToken
       if (!refreshToken) {
         const authHeader = req.headers.authorization
-        if (authHeader && authHeader.startsWith('Bearer ')) {
+        if (authHeader && authHeader.startsWith("Bearer ")) {
           refreshToken = authHeader.substring(7)
         }
       }
@@ -167,7 +192,7 @@ export class AuthController {
 
       if (!decoded || !decoded.id) throw new UnauthorizedException("Invalid refresh token")
 
-      const user = await userRepository.find(decoded.id)
+      const user = await this.userRepository.find(decoded.id)
 
       if (!user) throw new UnauthorizedException("Invalid refresh token")
 
@@ -181,20 +206,23 @@ export class AuthController {
         partitioned: false
       })
 
-      delete user.password
+      const { password: _, ...userWithoutPassword } = user
 
-      res.status(200).json({ message: "User authenticated in successfully", user, token, refreshToken })
+      res
+        .status(200)
+        .json({ message: "User authenticated in successfully", user: userWithoutPassword, token, refreshToken })
     } catch (_refreshError) {
       return res.redirect(securityConfig.auth_routes.sign_out)
     }
   }
 
-  static removeUser = async (req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) => {
+  @Delete({ path: "/delete-account" })
+  async removeUser(req: AuthenticatedRequest<Request>, res: Response, _next: NextFunction) {
     const user = req.user
 
     if (!user) throw new UnauthorizedException()
 
-    await userRepository.delete(user.id)
+    await this.userRepository.delete(user.id)
 
     res.clearCookie("Token")
     res.clearCookie("RefreshToken")
