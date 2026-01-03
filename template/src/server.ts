@@ -37,7 +37,6 @@ app.use(
 app.listen(port, () => {
   LyraConsole.info(
     `${params.api_name} v${params.api_version}`,
-    `Server running at ${params.api_host}:${params.api_port}`,
-    ""
+    `Server running at ${params.api_host}:${params.api_port}`
   )
 })

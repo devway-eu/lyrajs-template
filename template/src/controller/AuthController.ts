@@ -1,4 +1,4 @@
-import { AccessControl, SecurityConfig } from "@lyra-js/core"
+import { AccessControl, isAuthenticated, SecurityConfig } from "@lyra-js/core"
 import {
   Controller,
   Delete,
@@ -6,6 +6,7 @@ import {
   NextFunction,
   Patch,
   Post,
+  rateLimiter,
   Request,
   Response,
   Route,
@@ -67,7 +68,7 @@ export class AuthController extends Controller {
     }
   }
 
-  @Post({ path: "/sign-in" })
+  @Post({ path: "/sign-in", middlewares: [rateLimiter] })
   async signIn(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body
@@ -140,13 +141,17 @@ export class AuthController extends Controller {
   }
 
   @Get({ path: "/sign-out" })
-  async signOut(_req: Request, res: Response) {
-    res.clearCookie("Token")
-    res.clearCookie("RefreshToken")
-    res.status(200).json({ message: "Unauthenticated successfully" })
+  async signOut(_req: Request, res: Response, next: NextFunction) {
+    try {
+      res.clearCookie("Token")
+      res.clearCookie("RefreshToken")
+      return res.status(200).json({ message: "Unauthenticated successfully" })
+    } catch (error) {
+      next(error)
+    }
   }
 
-  @Patch({ path: "/update-account" })
+  @Patch({ path: "/update-account", middlewares: [isAuthenticated] })
   async updateProfile(req: Request, res: Response, next: NextFunction) {
     try {
       const { data }: { data: User } = req.body
@@ -155,7 +160,7 @@ export class AuthController extends Controller {
       if (data?.id && data.id !== user.id) throw new UnauthorizedException()
 
       // Remove protected fields
-      const { role, created_at, password, ...updateData } = data
+      const { role: _role, created_at: _created_at, password, ...updateData } = data
 
       // Hash password if provided
       const hashedPassword = password ? await this.bcrypt.hash(password, 10) : undefined
@@ -198,7 +203,7 @@ export class AuthController extends Controller {
       const token = await AccessControl.getNewToken(user)
 
       res.cookie("Token", token, {
-        sameSite: "lax",
+        sameSite: "Lax",
         httpOnly: true,
         secure: process.env.ENV === "production",
         maxAge: securityConfig.jwt.token_expiration * 1000,

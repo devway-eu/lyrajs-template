@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  isAuthenticated,
   NextFunction,
   Patch,
   Post,
@@ -16,7 +17,7 @@ import {
 
 import { User } from "@entity/User"
 
-@Route({ path: "/user" })
+@Route({ path: "/user", middlewares: [isAuthenticated] })
 export class UserController extends Controller {
   @Get({ path: "/all" })
   async list(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -95,7 +96,7 @@ export class UserController extends Controller {
   async update(req: Request, res: Response, next: NextFunction, user: User) {
     try {
       const { data }: { data: User } = req.body
-      if (!user) res.status(404).json({ message: "User not found" })
+      if (!user) return res.status(404).json({ message: "User not found" })
       if (!AccessControl.isOwner(req.user, user.id) && !AccessControl.hasRoleHigherThan(req.user, user.role))
         throw new UnauthorizedException()
 
@@ -118,7 +119,7 @@ export class UserController extends Controller {
     try {
       const { id } = req.params
       const user = await this.userRepository.find(id)
-      if (!user) res.status(404).json({ message: "User not found" })
+      if (!user) return res.status(404).json({ message: "User not found" })
       if (!AccessControl.isOwner(req.user, user.id) && !AccessControl.hasRoleHigherThan(req.user, user.role))
         throw new UnauthorizedException()
       if (!user?.id) res.status(400).json({ message: "Invalid user id" })
