@@ -1,6 +1,5 @@
 import { AccessControl, SecurityConfig } from "@lyra-js/core"
 import {
-  AuthenticatedRequest,
   Controller,
   Delete,
   Get,
@@ -122,7 +121,7 @@ export class AuthController extends Controller {
   }
 
   @Get({ path: "/user" })
-  async getAuthenticatedUser(req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) {
+  async getAuthenticatedUser(req: Request, res: Response, next: NextFunction) {
     try {
       const user = req.user as User
 
@@ -148,7 +147,7 @@ export class AuthController extends Controller {
   }
 
   @Patch({ path: "/update-account" })
-  async updateProfile(req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) {
+  async updateProfile(req: Request, res: Response, next: NextFunction) {
     try {
       const { data }: { data: User } = req.body
       const user = req.user as User
@@ -217,7 +216,7 @@ export class AuthController extends Controller {
   }
 
   @Delete({ path: "/delete-account" })
-  async removeUser(req: AuthenticatedRequest<Request>, res: Response, _next: NextFunction) {
+  async removeUser(req: Request, res: Response, _next: NextFunction) {
     const user = req.user
 
     if (!user) throw new UnauthorizedException()

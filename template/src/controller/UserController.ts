@@ -1,6 +1,5 @@
 import {
   AccessControl,
-  AuthenticatedRequest,
   Controller,
   Delete,
   Get,
@@ -20,10 +19,10 @@ import { User } from "@entity/User"
 @Route({ path: "/user" })
 export class UserController extends Controller {
   @Get({ path: "/all" })
-  async list(req: AuthenticatedRequest<Request>, res: Response, next: NextFunction): Promise<void> {
+  async list(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const users = (await this.userRepository.findAll()).map((user: User) => {
-        const { password, ...userWithoutPassword } = user
+        const { password: _password, ...userWithoutPassword } = user
         return userWithoutPassword
       })
       res.status(200).json({ message: "Users fetched successfully", users })
@@ -33,9 +32,9 @@ export class UserController extends Controller {
   }
 
   @Get({ path: "/:user", resolve: { user: User } })
-  async read(req: AuthenticatedRequest<Request>, res: Response, next: NextFunction, user: User) {
+  async read(req: Request, res: Response, next: NextFunction, user: User) {
     try {
-      const { password, ...userWithoutPassword } = user
+      const { password: _password, ...userWithoutPassword } = user
       res.status(200).json({ message: "User fetched successfully", user: userWithoutPassword })
     } catch (error) {
       next(error)
@@ -43,7 +42,7 @@ export class UserController extends Controller {
   }
 
   @Post({ path: "/" })
-  async create(req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) {
+  async create(req: Request, res: Response, next: NextFunction) {
     try {
       const { data }: { data: User } = req.body
 
@@ -93,7 +92,7 @@ export class UserController extends Controller {
   }
 
   @Patch({ path: "/:user", resolve: { user: User } })
-  async update(req: AuthenticatedRequest<Request>, res: Response, next: NextFunction, user: User) {
+  async update(req: Request, res: Response, next: NextFunction, user: User) {
     try {
       const { data }: { data: User } = req.body
       if (!user) res.status(404).json({ message: "User not found" })
@@ -101,7 +100,7 @@ export class UserController extends Controller {
         throw new UnauthorizedException()
 
       // Remove sensitive fields from data
-      const { password, email, role, ...updateData } = data
+      const { password: _password, email: _email, role, ...updateData } = data
 
       // Keep role if user doesn't have higher privileges
       const finalData = AccessControl.hasRoleHigherThan(req.user, user.role) ? updateData : { ...updateData, role }
@@ -115,7 +114,7 @@ export class UserController extends Controller {
   }
 
   @Delete({ path: "/:id" })
-  async delete(req: AuthenticatedRequest<Request>, res: Response, next: NextFunction) {
+  async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params
       const user = await this.userRepository.find(id)
