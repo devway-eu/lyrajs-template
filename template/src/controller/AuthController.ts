@@ -121,7 +121,7 @@ export class AuthController extends Controller {
     }
   }
 
-  @Get({ path: "/user" })
+  @Get({ path: "/user", middlewares: [isAuthenticated] })
   async getAuthenticatedUser(req: Request, res: Response, next: NextFunction) {
     try {
       const user = req.user as User
@@ -220,7 +220,7 @@ export class AuthController extends Controller {
     }
   }
 
-  @Delete({ path: "/delete-account" })
+  @Delete({ path: "/delete-account", middlewares: [isAuthenticated] })
   async removeUser(req: Request, res: Response, _next: NextFunction) {
     const user = req.user
 
