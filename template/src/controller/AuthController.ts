@@ -3,12 +3,9 @@ import {
   Controller,
   Delete,
   Get,
-  NextFunction,
   Patch,
   Post,
   rateLimiter,
-  Request,
-  Response,
   Route,
   UnauthorizedException,
   Validator
@@ -21,9 +18,9 @@ const securityConfig = new SecurityConfig().getConfig()
 @Route({ path: "/auth" })
 export class AuthController extends Controller {
   @Post({ path: "/sign-up" })
-  async signUp(req: Request, res: Response, next: NextFunction) {
+  async signUp() {
     try {
-      const { username, firstname, lastname, email, password } = req.body
+      const { username, firstname, lastname, email, password } = this.req.body
 
       if (!username || !firstname || !lastname || !email || !password) {
         throw new Error("Missing required fields")
@@ -62,16 +59,16 @@ export class AuthController extends Controller {
       const registeredUser = await this.userRepository.findOneBy({ email })
       const { password: _, ...userWithoutPassword } = registeredUser || {}
 
-      res.status(201).json({ message: "User registered successfully", user: userWithoutPassword })
+      this.res.status(201).json({ message: "User registered successfully", user: userWithoutPassword })
     } catch (error) {
-      next(error)
+      this.next(error)
     }
   }
 
   @Post({ path: "/sign-in", middlewares: [rateLimiter] })
-  async signIn(req: Request, res: Response, next: NextFunction) {
+  async signIn() {
     try {
-      const { email, password } = req.body
+      const { email, password } = this.req.body
 
       if (!email || !password) {
         throw new Error("Missing required fields")
@@ -95,7 +92,7 @@ export class AuthController extends Controller {
 
       await this.userRepository.save(user)
 
-      res.cookie("Token", token, {
+      this.res.cookie("Token", token, {
         sameSite: "Lax",
         httpOnly: true,
         secure: process.env.ENV === "production",
@@ -103,7 +100,7 @@ export class AuthController extends Controller {
         partitioned: false
       })
 
-      res.cookie("RefreshToken", refreshToken, {
+      this.res.cookie("RefreshToken", refreshToken, {
         sameSite: "Lax",
         httpOnly: true,
         secure: process.env.ENV === "production",
@@ -113,22 +110,22 @@ export class AuthController extends Controller {
 
       const { password: _, ...userWithoutPassword } = user
 
-      res
+      this.res
         .status(200)
         .json({ message: "User authenticated in successfully", user: userWithoutPassword, token, refreshToken })
     } catch (error) {
-      next(error)
+      this.next(error)
     }
   }
 
   @Get({ path: "/user", middlewares: [isAuthenticated] })
-  async getAuthenticatedUser(req: Request, res: Response, next: NextFunction) {
+  async getAuthenticatedUser() {
     try {
-      const user = req.user as User
+      const user = this.req.user as User
 
       if (!user) throw new UnauthorizedException()
 
-      res.status(200).json({
+      this.res.status(200).json({
         id: user.id,
         firstname: user.firstname,
         lastname: user.lastname,
@@ -136,26 +133,26 @@ export class AuthController extends Controller {
         role: user.role
       })
     } catch (error) {
-      next(error)
+      this.next(error)
     }
   }
 
   @Get({ path: "/sign-out" })
-  async signOut(_req: Request, res: Response, next: NextFunction) {
+  async signOut() {
     try {
-      res.clearCookie("Token")
-      res.clearCookie("RefreshToken")
-      return res.status(200).json({ message: "Unauthenticated successfully" })
+      this.res.clearCookie("Token")
+      this.res.clearCookie("RefreshToken")
+      return this.res.status(200).json({ message: "Unauthenticated successfully" })
     } catch (error) {
-      next(error)
+      this.next(error)
     }
   }
 
   @Patch({ path: "/update-account", middlewares: [isAuthenticated] })
-  async updateProfile(req: Request, res: Response, next: NextFunction) {
+  async updateProfile() {
     try {
-      const { data }: { data: User } = req.body
-      const user = req.user as User
+      const { data }: { data: User } = this.req.body
+      const user = this.req.user as User
       if (!user) throw new UnauthorizedException()
       if (data?.id && data.id !== user.id) throw new UnauthorizedException()
 
@@ -172,19 +169,19 @@ export class AuthController extends Controller {
       }
 
       if (user) await this.userRepository.save(finalData)
-      res.status(200).json({ message: "Users updated successfully" })
+      this.res.status(200).json({ message: "Users updated successfully" })
     } catch (error) {
-      next(error)
+      this.next(error)
     }
   }
 
   @Get({ path: "/refresh-token" })
-  async refreshToken(req: Request, res: Response, _next: NextFunction) {
+  async refreshToken() {
     try {
       const securityConfig = new SecurityConfig().getConfig()
-      let refreshToken = req.cookies.RefreshToken
+      let refreshToken = this.req.cookies.RefreshToken
       if (!refreshToken) {
-        const authHeader = req.headers.authorization
+        const authHeader = this.req.headers.authorization
         if (authHeader && authHeader.startsWith("Bearer ")) {
           refreshToken = authHeader.substring(7)
         }
@@ -202,7 +199,7 @@ export class AuthController extends Controller {
 
       const token = await AccessControl.getNewToken(user)
 
-      res.cookie("Token", token, {
+      this.res.cookie("Token", token, {
         sameSite: "Lax",
         httpOnly: true,
         secure: process.env.ENV === "production",
@@ -212,25 +209,25 @@ export class AuthController extends Controller {
 
       const { password: _, ...userWithoutPassword } = user
 
-      res
+      this.res
         .status(200)
         .json({ message: "User authenticated in successfully", user: userWithoutPassword, token, refreshToken })
     } catch (_refreshError) {
-      return res.redirect(securityConfig.auth_routes.sign_out)
+      return this.res.redirect(securityConfig.auth_routes.sign_out)
     }
   }
 
   @Delete({ path: "/delete-account", middlewares: [isAuthenticated] })
-  async removeUser(req: Request, res: Response, _next: NextFunction) {
-    const user = req.user
+  async removeUser() {
+    const user = this.req.user
 
     if (!user) throw new UnauthorizedException()
 
     await this.userRepository.delete(user.id)
 
-    res.clearCookie("Token")
-    res.clearCookie("RefreshToken")
+    this.res.clearCookie("Token")
+    this.res.clearCookie("RefreshToken")
 
-    res.status(200).json({ message: "User deleted successfully" })
+    this.res.status(200).json({ message: "User deleted successfully" })
   }
 }
