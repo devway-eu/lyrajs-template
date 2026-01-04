@@ -14,7 +14,6 @@ security:
     max_attempts: 5
     message: 'Too many login attempts, please try again later'
   access_control:
-    - { path: /api/auth/sign-out, roles: [ROLE_USER] }
     - { path: /api/auth/user, roles: [ROLE_USER] }
     - { path: /api/admin, roles: [ROLE_ADMIN] }
   role_hierarchy:
