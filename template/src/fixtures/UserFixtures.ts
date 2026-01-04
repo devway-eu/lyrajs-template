@@ -1,8 +1,8 @@
-import { Container } from "@lyra-js/core"
+import { Fixture } from "@lyra-js/core"
 
 import { User } from "@entity/User"
 
-export class AppFixtures extends Container {
+export class UserFixtures extends Fixture {
   private users = [
     {
       username: "Mithrandil",
