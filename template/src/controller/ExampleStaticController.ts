@@ -14,4 +14,14 @@ export class ExampleStaticController extends Controller {
       next(error)
     }
   }
+
+  static async exampleSsrRouteMethod(req: Request, res: Response, next: NextFunction) {
+    try {
+      await Controller.renderStatic(res, "ExampleRender.tsx", {
+        title: "Item fetched successfully"
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
 }

@@ -19,6 +19,11 @@ const app = createServer()
 // Server settings
 app.setSetting("trust proxy", false)
 app.setSetting("request max size", securityConfig.limits.request_max_size || "10mb")
+app.setSetting("ssr", {
+  engine: "jsx", // Default template engine (support tsx and jsx files)
+  templates: "./src/templates", // Path to templates directory
+  options: {} // Engine-specific options (optional)
+})
 
 // Register third-party libraries for dependency injection
 app.register(bcrypt, "bcrypt")
