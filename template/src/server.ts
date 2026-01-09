@@ -37,6 +37,11 @@ app.use(
   })
 )
 
+// Enable scheduler (optional) - uncomment to activate scheduled jobs
+// Jobs are auto-discovered from src/jobs directory
+// Only schedules with enabled: true will run
+// app.enableScheduler({ timezone: "UTC" })
+
 // Controllers are auto-discovered and registered from src/controller directory
 // Repositories and Services are auto-injected via DIContainer
 app.listen(port, () => {
