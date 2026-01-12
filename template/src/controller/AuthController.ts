@@ -23,25 +23,25 @@ export class AuthController extends Controller {
       const { username, firstname, lastname, email, password } = this.req.body
 
       if (!username || !firstname || !lastname || !email || !password) {
-        throw new Error("Missing required fields")
+        this.badRequest("Missing required fields")
       }
 
       if (!Validator.isUsernameValid(username)) {
-        throw new Error("Invalid username")
+        this.badRequest("Invalid username")
       }
 
       if (!Validator.isEmailValid(email)) {
-        throw new Error("Invalid email")
+        this.badRequest("Invalid email")
       }
 
       const isEmailUsed = await this.userRepository.findOneBy({ email })
 
       if (isEmailUsed) {
-        throw new Error("Email already in use")
+        this.badRequest("Email already in use")
       }
 
       if (!Validator.isPasswordValid(password)) {
-        throw new Error("Invalid password")
+        this.badRequest("Invalid password")
       }
 
       const user = new User()
@@ -71,13 +71,13 @@ export class AuthController extends Controller {
       const { email, password } = this.req.body
 
       if (!email || !password) {
-        throw new Error("Missing required fields")
+        this.badRequest("Missing required fields")
       }
 
       const user = await this.userRepository.findOneBy({ email })
 
       if (!user || !(user && (await this.bcrypt.compare(password, user.password)))) {
-        throw new Error("Invalid credentials")
+        this.unauthorized("Invalid credentials")
       }
 
       const token = this.jwt.sign({ id: user.id }, securityConfig.jwt.secret_key as string, {
