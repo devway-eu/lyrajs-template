@@ -1,13 +1,20 @@
-import { Base } from "@templates/layout/Base"
+import { Base } from "@app/templates/layout/Base"
 
-export default function ExampleRender({ title }: { title: string }) {
+export default function ExampleRender({
+  title,
+  content,
+  documentationUrl
+}: {
+  title: string
+  content: string
+  documentationUrl: string
+}) {
   return (
     <Base>
-      <h1>{title}</h1>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Expedita laborum magnam nam necessitatibus provident
-        rerum!
-      </p>
+      <section>
+        <h1>{title}</h1>
+        <p>{content}</p>
+      </section>
     </Base>
   )
 }
