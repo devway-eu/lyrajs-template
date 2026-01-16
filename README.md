@@ -31,20 +31,44 @@ When developers run `npm create lyrajs`, this tool copies the template folder to
    - JWT token generation (access + refresh tokens)
    - Password hashing with bcrypt
    - Protected routes via configuration
+   - Enhanced with dependency injection 🆕
 
 2. **User Management**
    - User entity with role support
    - UserRepository with custom queries
-   - UserController with CRUD operations
-   - Complete user routes
+   - UserController with CRUD operations and decorator support 🆕
+   - Flexible routing (traditional routes or decorators) 🆕
 
 3. **Database Setup**
    - MySQL/MariaDB configuration
-   - Migration system ready to use
+   - Migration system with backup/restore 🆕
    - Example entity (User)
-   - Fixture system for seed data
+   - Enhanced fixture system with dependencies 🆕
 
-4. **Configuration Files**
+4. **Server-Side Rendering (SSR)** 🆕
+   - JSX/TSX template engine configured
+   - Example template files
+   - Layout system for consistent page structure
+   - Ready to use for HTML responses
+
+5. **Job Scheduling** 🆕
+   - Pre-configured scheduler system
+   - Example job with cron schedule
+   - Timezone support
+   - Jobs auto-discovered from `src/jobs/`
+
+6. **Static Assets** 🆕
+   - Public directory for static files
+   - Configured static file serving
+   - Ready for images, CSS, fonts, etc.
+
+7. **Dependency Injection** 🆕
+   - DI container configured
+   - Third-party libraries registered (bcrypt, jwt)
+   - Auto-injection in controllers and services
+   - Singleton service management
+
+8. **Configuration Files**
    - `database.yaml` - Database connection settings
    - `security.yaml` - JWT and access control rules
    - `router.yaml` - API base path configuration
@@ -52,46 +76,55 @@ When developers run `npm create lyrajs`, this tool copies the template folder to
    - `mailer.yaml` - Email service settings
    - `.env` - Environment variables
 
-5. **Project Structure**
+9. **Project Structure**
    - TypeScript configuration
    - ESLint and Prettier setup
-   - Organized folder structure (controller, entity, repository, router, etc.)
-   - Example code demonstrating patterns
+   - Organized folder structure with new v2 directories
+   - Example code demonstrating both traditional and modern patterns
 
-6. **Development Tools**
+10. **Development Tools**
    - Hot reload with `npm run dev`
    - Build scripts
    - Type definitions
    - Path aliases configured
+   - Enhanced CLI with new commands 🆕
 
 ### Project Structure
 
 ```
 my-project/
 ├── src/
-│   ├── controller/        # HTTP request handlers
+│   ├── controller/        # HTTP controllers (decorator or traditional)
 │   │   ├── AuthController.ts    # Registration, login, logout
 │   │   └── UserController.ts    # User CRUD operations
 │   ├── entity/            # Database models
 │   │   └── User.ts              # User entity with decorators
 │   ├── repository/        # Data access layer
 │   │   └── UserRepository.ts    # User database operations
-│   ├── router/            # Route definitions
+│   ├── router/            # Route definitions (traditional routing)
 │   │   ├── index.ts             # Main router setup
 │   │   └── routes/
 │   │       ├── authRoutes.ts    # Auth endpoints
 │   │       └── userRoutes.ts    # User endpoints
-│   ├── middleware/        # Custom middleware
-│   │   └── YourMiddleware.ts    # Example middleware
 │   ├── services/          # Business logic services
 │   │   └── YourService.ts       # Example service
+│   ├── middleware/        # Custom middleware
+│   │   └── YourMiddleware.ts    # Example middleware
+│   ├── jobs/              # 🆕 Scheduled jobs
+│   │   └── ExampleJob.ts        # Example cron job
+│   ├── templates/         # 🆕 SSR templates (JSX/TSX)
+│   │   ├── ExampleRender.tsx    # Example template
+│   │   ├── layout/              # Layout templates
+│   │   └── README.md            # Template documentation
 │   ├── fixtures/          # Seed data
 │   │   └── AppFixtures.ts       # Sample user data
 │   ├── tests/             # Test files
 │   │   └── exemple.test.ts      # Example test
 │   ├── types/             # TypeScript types
 │   │   └── ExempleType.ts       # Example types
-│   └── server.ts          # Application entry point
+│   └── server.ts          # Application entry point (updated for v2)
+├── public/                # 🆕 Static assets
+│   └── assets/            # Images, CSS, fonts, etc.
 ├── config/                # YAML configuration files
 │   ├── database.yaml
 │   ├── router.yaml
@@ -99,6 +132,8 @@ my-project/
 │   ├── parameters.yaml
 │   └── mailer.yaml
 ├── migrations/            # SQL migration files
+├── backups/               # 🆕 Database backups
+├── logs/                  # 🆕 Application logs
 ├── .env                   # Environment variables
 ├── .prettierrc            # Code formatting rules
 ├── eslint.config.js       # Linting configuration
@@ -106,6 +141,8 @@ my-project/
 ├── tsconfig.json          # TypeScript configuration
 └── README.md              # Project documentation
 ```
+
+> **Note:** LyraJS v2 supports both traditional routing (`src/router/`) and decorator-based routing. Choose the approach that works best for your project.
 
 ## Usage
 
@@ -182,6 +219,8 @@ The template includes these working endpoints:
 - `PUT /api/user/` - Create new user
 - `PATCH /api/user/:id` - Update user
 - `DELETE /api/user/:id` - Delete user
+
+> **Note:** In v2, you can define these routes either with traditional route files or using decorators directly in controllers (`@Get`, `@Post`, etc.).
 
 ## Contributing
 
