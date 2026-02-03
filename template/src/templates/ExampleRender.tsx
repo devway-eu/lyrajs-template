@@ -11,8 +11,12 @@ export default function ExampleRender({ title, content }: { title: string; conte
         <h2>{title}</h2>
         <p>{content}</p>
         <p className="doc-links">
-          <a href="https://lyrajs.dev/documentation/ssr#overview" className="btn">SSR Documentation</a>
-          <a href="https://lyrajs.dev/documentation" className="btn-outline">Full Documentation</a>
+          <a href="https://lyrajs.dev/documentation/ssr#overview" target="_blank" className="btn">
+            SSR Documentation
+          </a>
+          <a href="https://lyrajs.dev/documentation" target="_blank" className="btn-outline">
+            Full Documentation
+          </a>
         </p>
       </section>
     </Base>
