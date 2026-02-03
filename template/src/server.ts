@@ -1,6 +1,7 @@
 import "reflect-metadata"
 
 import { Config, cors, createServer, LyraConsole, SecurityConfig } from "@lyra-js/core"
+import { router } from "@router/index"
 import bcrypt from "bcrypt"
 import * as dotenv from "dotenv"
 import jwt from "jsonwebtoken"
@@ -45,6 +46,9 @@ app.use(
 app.serveStatic("/assets", {
   root: "public/assets"
 })
+
+// Mount manual routes (static controllers registered via router files)
+app.use(router)
 
 // Controllers are auto-discovered and registered from src/controller directory
 // Repositories and Services are auto-injected via DIContainer

@@ -1,19 +1,19 @@
-import { Base } from "@app/templates/layout/Base"
+import { Base } from "./layout/Base"
 
-export default function ExampleRender({
-  title,
-  content,
-  documentationUrl
-}: {
-  title: string
-  content: string
-  documentationUrl: string
-}) {
+export default function ExampleRender({ title, content }: { title: string; content: string }) {
   return (
     <Base>
       <section>
-        <h1>{title}</h1>
+        <figure className="logo">
+          <img src="/assets/logo.png" alt="LyraJS logo" />
+        </figure>
+        <h1 className="text-gradient">LyraJS</h1>
+        <h2>{title}</h2>
         <p>{content}</p>
+        <p className="doc-links">
+          <a href="https://lyrajs.dev/documentation/ssr#overview" className="btn">SSR Documentation</a>
+          <a href="https://lyrajs.dev/documentation" className="btn-outline">Full Documentation</a>
+        </p>
       </section>
     </Base>
   )
