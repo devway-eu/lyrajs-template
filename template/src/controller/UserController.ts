@@ -16,7 +16,7 @@ import { User } from "@entity/User"
 
 @Route({ path: "/user", middlewares: [isAuthenticated] })
 export class UserController extends Controller {
-  @Get({ path: "/all" })
+  @Get({ path: "/" })
   async list(): Promise<void> {
     try {
       const users = (await this.userRepository.findAll()).map((user: User) => {
