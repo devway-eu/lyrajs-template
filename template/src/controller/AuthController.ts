@@ -1,4 +1,4 @@
-import { AccessControl, isAuthenticated, SecurityConfig } from "@lyra-js/core"
+import { AccessControl, Config, isAuthenticated, SecurityConfig } from "@lyra-js/core"
 import {
   Controller,
   Delete,
@@ -100,7 +100,10 @@ export class AuthController extends Controller {
         partitioned: false
       })
 
+      const base_path = new Config().get("router.base_path")
+
       this.res.cookie("RefreshToken", refreshToken, {
+        path: `${base_path}/auth`,
         sameSite: "Lax",
         httpOnly: true,
         secure: process.env.ENV === "production",
@@ -140,8 +143,9 @@ export class AuthController extends Controller {
   @Get({ path: "/sign-out" })
   async signOut() {
     try {
+      const base_path = new Config().get("router.base_path")
       this.res.clearCookie("Token")
-      this.res.clearCookie("RefreshToken")
+      this.res.clearCookie("RefreshToken", { path: `${base_path}/auth` })
       return this.res.status(200).json({ message: "Unauthenticated successfully" })
     } catch (error) {
       this.next(error)
@@ -226,7 +230,8 @@ export class AuthController extends Controller {
     await this.userRepository.delete(user.id)
 
     this.res.clearCookie("Token")
-    this.res.clearCookie("RefreshToken")
+    const base_path = new Config().get("router.base_path")
+    this.res.clearCookie("RefreshToken", { path: `${base_path}/auth` })
 
     this.res.status(200).json({ message: "User deleted successfully" })
   }
