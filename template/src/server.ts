@@ -1,6 +1,6 @@
 import "reflect-metadata"
 
-import { Config, cors, createServer, LyraConsole, SecurityConfig } from "@lyra-js/core"
+import {Config, cors, createServer, isAuthenticated, LyraConsole, SecurityConfig} from "@lyra-js/core"
 import { router } from "@router/index"
 import bcrypt from "bcrypt"
 import * as dotenv from "dotenv"
@@ -13,6 +13,7 @@ process.env.TZ = process.env.TZ || "Europe/Paris"
 
 const params = new Config().get("parameters")
 const securityConfig = new SecurityConfig().getConfig()
+const { base_path } = new Config().get("router")
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3333
 const app = createServer()
@@ -34,6 +35,8 @@ app.register(jwt, "jwt")
 app.use(
   cors({
     origin: `${process.env.CLIENT_APP_URL}`,
+    headers: "Content-Type, Access-Control-Allow-Origin, Access-Control-Allow-Headers",
+    methods: "GET, POST, PATCH, PUT, DELETE, OPTIONS",
     credentials: true
   })
 )
@@ -45,6 +48,11 @@ app.use(
 
 app.serveStatic("/assets", {
   root: "public/assets"
+})
+
+app.use("/uploads", isAuthenticated)
+app.serveStatic(base_path + "/uploads", {
+  root: "uploads"
 })
 
 // Mount manual routes (static controllers registered via router files)
