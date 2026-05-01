@@ -17,7 +17,7 @@ export class ErrorController extends Controller {
    */
   @Get("/404")
   handle404(): void {
-    this.res.status(HTTP_STATUS.NOT_FOUND).json({
+    return this.res.status(HTTP_STATUS.NOT_FOUND).json({
       error: "Not Found",
       message: "The requested resource was not found",
       statusCode: HTTP_STATUS.NOT_FOUND,
@@ -37,7 +37,7 @@ export class ErrorController extends Controller {
    */
   @Get("/500")
   handle500(): void {
-    this.res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+    return this.res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       error: "Internal Server Error",
       message: "An unexpected error occurred",
       statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR
@@ -55,7 +55,7 @@ export class ErrorController extends Controller {
    */
   @Get("/401")
   handle401(): void {
-    this.res.status(HTTP_STATUS.UNAUTHORIZED).json({
+    return this.res.status(HTTP_STATUS.UNAUTHORIZED).json({
       error: "Unauthorized",
       message: "Authentication is required",
       statusCode: HTTP_STATUS.UNAUTHORIZED
@@ -73,7 +73,7 @@ export class ErrorController extends Controller {
    */
   @Get("/403")
   handle403(): void {
-    this.res.status(HTTP_STATUS.FORBIDDEN).json({
+    return this.res.status(HTTP_STATUS.FORBIDDEN).json({
       error: "Forbidden",
       message: "You don't have permission to access this resource",
       statusCode: HTTP_STATUS.FORBIDDEN
@@ -91,7 +91,7 @@ export class ErrorController extends Controller {
    */
   @Get("/400")
   handle400(): void {
-    this.res.status(HTTP_STATUS.BAD_REQUEST).json({
+    return this.res.status(HTTP_STATUS.BAD_REQUEST).json({
       error: "Bad Request",
       message: "The request was invalid",
       statusCode: HTTP_STATUS.BAD_REQUEST
@@ -104,7 +104,7 @@ export class ErrorController extends Controller {
    */
   @Get("/409")
   handle409(): void {
-    this.res.status(HTTP_STATUS.CONFLICT).json({
+    return this.res.status(HTTP_STATUS.CONFLICT).json({
       error: "Conflict",
       message: "The request conflicts with current state",
       statusCode: HTTP_STATUS.CONFLICT
@@ -117,7 +117,7 @@ export class ErrorController extends Controller {
    */
   @Get("/422")
   handle422(): void {
-    this.res.status(HTTP_STATUS.UNPROCESSABLE_ENTITY).json({
+    return this.res.status(HTTP_STATUS.UNPROCESSABLE_ENTITY).json({
       error: "Unprocessable Entity",
       errors: "Validation failed",
       statusCode: HTTP_STATUS.UNPROCESSABLE_ENTITY

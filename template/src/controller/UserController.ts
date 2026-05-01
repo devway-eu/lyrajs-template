@@ -23,9 +23,9 @@ export class UserController extends Controller {
         const { password: _password, ...userWithoutPassword } = user
         return userWithoutPassword
       })
-      this.res.status(200).json({ message: "Users fetched successfully", users })
+      return this.res.status(200).json({ message: "Users fetched successfully", users })
     } catch (error) {
-      this.next(error)
+      return this.next(error)
     }
   }
 
@@ -33,9 +33,9 @@ export class UserController extends Controller {
   async read(user: User) {
     try {
       const { password: _password, ...userWithoutPassword } = user
-      this.res.status(200).json({ message: "User fetched successfully", user: userWithoutPassword })
+      return this.res.status(200).json({ message: "User fetched successfully", user: userWithoutPassword })
     } catch (error) {
-      this.next(error)
+      return this.next(error)
     }
   }
 
@@ -83,9 +83,9 @@ export class UserController extends Controller {
       user.role = "ROLE_USER"
 
       await this.userRepository.save(data)
-      this.res.status(201).json({ message: "User created successfully" })
+      return this.res.status(201).json({ message: "User created successfully" })
     } catch (error) {
-      this.next(error)
+      return this.next(error)
     }
   }
 
@@ -105,9 +105,9 @@ export class UserController extends Controller {
 
       finalData.updated_at = new Date()
       await this.userRepository.save(finalData)
-      this.res.status(200).json({ message: "Users updated successfully" })
+      return this.res.status(200).json({ message: "Users updated successfully" })
     } catch (error) {
-      this.next(error)
+      return this.next(error)
     }
   }
 
@@ -121,9 +121,9 @@ export class UserController extends Controller {
         throw new UnauthorizedException()
       if (!user?.id) this.res.status(400).json({ message: "Invalid user id" })
       if (user?.id && id) await this.userRepository.delete(id)
-      this.res.status(200).json({ message: "User deleted successfully" })
+      return this.res.status(200).json({ message: "User deleted successfully" })
     } catch (error) {
-      this.next(error)
+      return this.next(error)
     }
   }
 }

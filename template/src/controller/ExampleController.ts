@@ -15,14 +15,14 @@ export class ExampleController extends Controller {
   @Get({ path: "/ssr" })
   async exampleSsrRouteMethod(req: Request, res: Response, next: NextFunction) {
     try {
-      await this.render("ExampleRender.tsx", {
+      return await this.render("ExampleRender.tsx", {
         title: "Server-Side Rendering with Decorator-Based Routing",
         content:
           "This page is rendered using the modern decorator-based approach in LyraJS. The @Route and @Get decorators automatically register this endpoint without requiring manual route file configuration. The this.render() instance method handles server-side template rendering, generating complete HTML pages that are SEO-friendly and load faster for users. Decorators make your code cleaner, more maintainable, and self-documenting.",
         documentationUrl: "https://lyrajs.dev/"
       })
     } catch (error) {
-      next(error)
+      return next(error)
     }
   }
 }

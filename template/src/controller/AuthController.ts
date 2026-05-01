@@ -1,4 +1,12 @@
-import { AccessControl, Config, isAuthenticated, SecurityConfig } from "@lyra-js/core"
+import {
+  AccessControl,
+  Config,
+  isAuthenticated,
+  Mail,
+  NotFoundException,
+  SecurityConfig,
+  ValidationException
+} from "@lyra-js/core"
 import {
   Controller,
   Delete,
@@ -10,8 +18,12 @@ import {
   UnauthorizedException,
   Validator
 } from "@lyra-js/core"
+import bcrypt from "bcrypt"
+import * as crypto from "node:crypto"
 
+import { ResetPassword } from "@entity/ResetPassword"
 import { User } from "@entity/User"
+import {EmailTemplateService} from "@services/EmailTemplateService";
 
 const securityConfig = new SecurityConfig().getConfig()
 
@@ -218,6 +230,216 @@ export class AuthController extends Controller {
         .json({ message: "User authenticated in successfully", user: userWithoutPassword, token, refreshToken })
     } catch (_refreshError) {
       return this.res.redirect(securityConfig.auth_routes.sign_out)
+    }
+  }
+
+  @Post({ path: "/verify-account/:validationSignature" })
+  async verifyAccount() {
+    try {
+      const { token: validation_signature } = this.req.body
+      if (!validation_signature) throw new ValidationException("Missing validation signature")
+
+      const user = await this.userRepository.findOneBy({ validation_signature })
+
+      if (!user) throw new NotFoundException("User")
+
+      if (!user.signature_expires_at || user.signature_expires_at < new Date()) {
+        throw new ValidationException("Validation signature expired")
+      }
+
+      await this.userRepository.update({
+        ...user,
+        is_active: 1,
+        is_verified: 1,
+        updated_at: new Date(),
+        validation_signature: null as never,
+        signature_expires_at: null as never
+      })
+
+      return this.res.status(200).json({ message: "Account verified successfully" })
+    } catch (error) {
+      this.next(error)
+    }
+  }
+
+  @Post({ path: "/resend-verification-email" })
+  async resendVerificationEmail() {
+    try {
+      const { token: validation_signature } = this.req.body
+
+      if (!validation_signature) {
+        throw new ValidationException("Missing validation signature")
+      }
+
+      const user = await this.userRepository.findOneBy({ validation_signature })
+
+      if (!user) throw new NotFoundException("User")
+
+      const newValidationSignature = crypto.randomBytes(32).toString("hex")
+
+      await this.userRepository.update({
+        ...user,
+        validation_signature: newValidationSignature,
+        signature_expires_at: new Date(Date.now() + 60 * 60 * 1000)
+      })
+
+      const validationLink = `${process.env.CLIENT_APP_URL}/verify-account/${user.validation_signature}`
+
+      const mail = new Mail(
+        user.email,
+        "Email Verification",
+        EmailTemplateService.accountValidationMail(user.name, validationLink),
+        []
+      )
+
+      await this.mailer.send(mail)
+
+      return this.res.status(200).json({ message: "Verification email sent successfully" })
+    } catch (error) {
+      this.next(error)
+    }
+  }
+
+  @Post({ path: "/request-new-password" })
+  async requestNewPassword() {
+    try {
+      const { email } = this.req.body
+
+      if (!email) throw new ValidationException("Missing email")
+
+      const user = await this.userRepository.findOneBy({ email })
+
+      if (!user) throw new NotFoundException("User")
+
+      const existingResetPasswords = await this.resetPasswordRepository.findBy({ user: user.id })
+
+      if (existingResetPasswords.length > 0) {
+        for (const existingResetPasswordItem of existingResetPasswords) {
+          await this.resetPasswordRepository.delete(existingResetPasswordItem.id)
+        }
+      }
+
+      const newResetPasswordToken = crypto.randomBytes(32).toString("hex")
+
+      const newResetPassword = new ResetPassword()
+      newResetPassword.token = newResetPasswordToken
+      newResetPassword.user = user.id
+      newResetPassword.requested_at = new Date()
+      newResetPassword.expires_at = new Date(Date.now() + 60 * 60 * 1000)
+
+      await this.resetPasswordRepository.save(newResetPassword)
+
+      const resetPasswordLink = `${process.env.CLIENT_APP_URL}/reset-password/${newResetPasswordToken}`
+
+      const mail = new Mail(
+        user.email,
+        "Reset Password",
+        EmailTemplateService.resetPasswordMail(user.name, resetPasswordLink),
+        []
+      )
+
+      await this.mailer.send(mail)
+
+      return this.res.status(200).json({ message: "Email sent" })
+    } catch (error) {
+      this.next(error)
+    }
+  }
+
+  @Post({ path: "/check-reset-password-key" })
+  async checkResetPasswordKey() {
+    try {
+      const { key: token } = this.req.body
+
+      if (!token) throw new ValidationException("Missing reset password token")
+
+      const resetPassword = await this.resetPasswordRepository.findOneBy({ token })
+
+      if (!resetPassword) {
+        throw new NotFoundException("Token")
+      }
+
+      if (resetPassword.expires_at < new Date()) {
+        throw new ValidationException("Token expired")
+      }
+
+      return this.res.status(200).json({ message: "Token is valid" })
+    } catch (error) {
+      this.next(error)
+    }
+  }
+
+  @Post({ path: "/resend-reset-password-email" })
+  async resendResetPasswordEmail() {
+    try {
+      const { token } = this.req.body
+
+      if (!token) throw new ValidationException("Missing reset token")
+
+      const resetPassword = await this.resetPasswordRepository.findOneBy({ token })
+
+      if (!resetPassword) throw new NotFoundException("Token")
+
+      const user = await resetPassword.getUser()
+
+      const newResetPasswordToken = crypto.randomBytes(32).toString("hex")
+
+      await this.resetPasswordRepository.save({
+        ...resetPassword,
+        token: newResetPasswordToken,
+        requested_at: new Date(),
+        expires_at: new Date(Date.now() + 60 * 60 * 1000)
+      })
+
+      const resetPasswordLink = `${process.env.CLIENT_APP_URL}/reset-password/${newResetPasswordToken}`
+
+      const mail = new Mail(
+        user.email,
+        "Reset Password",
+        EmailTemplateService.resetPasswordMail(user.name, resetPasswordLink),
+        []
+      )
+
+      await this.mailer.send(mail)
+
+      return this.res.status(200).json({ message: "Reset password email sent successfully" })
+    } catch (error) {
+      this.next(error)
+    }
+  }
+
+  @Post({ path: "/reset-password" })
+  async resetPassword() {
+    try {
+      const { key: token, password, confirmPassword } = this.req.body
+
+      if (!password || !confirmPassword) throw new ValidationException("Missing required fields")
+
+      if (password !== confirmPassword) throw new ValidationException("Passwords do not match")
+
+      const resetPassword = await this.resetPasswordRepository.findOneBy({ token })
+
+      if (!resetPassword) throw new NotFoundException("Token")
+
+      if (resetPassword.expires_at < new Date()) {
+        await this.resetPasswordRepository.delete(resetPassword.id)
+        throw new ValidationException("Token expired")
+      }
+
+      const user = await resetPassword.getUser()
+
+      const hashedNewPassword = await bcrypt.hash(password, 10)
+
+      await this.userRepository.save({
+        ...user,
+        password: hashedNewPassword
+      })
+
+      await this.resetPasswordRepository.delete(resetPassword.id)
+
+      return this.res.status(200).json({ message: "Password reset successfully" })
+    } catch (error) {
+      this.next(error)
     }
   }
 

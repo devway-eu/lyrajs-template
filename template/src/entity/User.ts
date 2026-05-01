@@ -1,4 +1,5 @@
 import { Column, Entity, Table } from "@lyra-js/core"
+import {ResetPasswordRepository} from "@repository/ResetPasswordRepository";
 
 @Table()
 export class User extends Entity<User> {
@@ -23,5 +24,10 @@ export class User extends Entity<User> {
 
   constructor(user?: Partial<User> | User) {
     super(user)
+  }
+
+  async getResetPassword() {
+    const resetPasswordRepository = new ResetPasswordRepository()
+    return await resetPasswordRepository.findOneBy({ user: this.id })
   }
 }
