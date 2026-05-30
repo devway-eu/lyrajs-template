@@ -1,5 +1,5 @@
 export class EmailTemplateService {
-  static signature = `<p>The <a href="${process.env.CLIENT_APP_URL}">Moviz App</a> Team</p>`
+  static signature = `<p>The <a href="${process.env.CLIENT_APP_URL}">Your App Name</a> Team</p>`
 
   static mailStyles = `<style>
                 body {

@@ -1,6 +1,6 @@
 {
   "name": "create-lyrajs",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "CLI tool to create new LyraJS projects",
   "keywords": [
     "create",
