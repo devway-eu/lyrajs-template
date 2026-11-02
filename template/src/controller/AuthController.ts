@@ -1,21 +1,19 @@
 import {
   AccessControl,
   Config,
-  isAuthenticated,
-  Mail,
-  NotFoundException,
-  SecurityConfig,
-  ValidationException
-} from "@lyra-js/core"
-import {
   Controller,
   Delete,
   Get,
+  isAuthenticated,
+  Mail,
+  NotFoundException,
   Patch,
   Post,
   rateLimiter,
   Route,
+  SecurityConfig,
   UnauthorizedException,
+  ValidationException,
   Validator
 } from "@lyra-js/core"
 import bcrypt from "bcrypt"
@@ -23,7 +21,7 @@ import * as crypto from "node:crypto"
 
 import { ResetPassword } from "@entity/ResetPassword"
 import { User } from "@entity/User"
-import {EmailTemplateService} from "@services/EmailTemplateService";
+import { EmailTemplateService } from "@services/EmailTemplateService"
 
 const securityConfig = new SecurityConfig().getConfig()
 
@@ -32,46 +30,74 @@ export class AuthController extends Controller {
   @Post({ path: "/sign-up" })
   async signUp() {
     try {
-      const { username, firstname, lastname, email, password } = this.req.body
+      const { username, firstname, lastname, email, password, passwordConfirm, acceptance } = this.req.body
 
-      if (!username || !firstname || !lastname || !email || !password) {
-        this.badRequest("Missing required fields")
+      if (!username || !email || !password || !passwordConfirm) {
+        return this.badRequest("Missing required fields")
       }
 
       if (!Validator.isUsernameValid(username)) {
-        this.badRequest("Invalid username")
+        return this.badRequest("Invalid username")
       }
 
       if (!Validator.isEmailValid(email)) {
-        this.badRequest("Invalid email")
+        return this.badRequest("Invalid email")
       }
 
       const isEmailUsed = await this.userRepository.findOneBy({ email })
+      const isUsernameUsed = await this.userRepository.findOneBy({ username })
+
+      if (isUsernameUsed) {
+        return this.badRequest("Username already in use")
+      }
 
       if (isEmailUsed) {
-        this.badRequest("Email already in use")
+        return this.badRequest("Email already in use")
       }
 
       if (!Validator.isPasswordValid(password)) {
-        this.badRequest("Invalid password")
+        return this.badRequest("Invalid password")
+      }
+
+      if (!acceptance) {
+        return this.badRequest("Terms agreement is required")
       }
 
       const user = new User()
       const hashedPassword = await this.bcrypt.hash(password, 10)
+      const validationSignature = crypto.randomBytes(32).toString("hex")
 
       user.username = username
-      user.firstname = firstname
-      user.lastname = lastname
       user.email = email
       user.password = hashedPassword
       user.role = "ROLE_USER"
+      user.validation_signature = validationSignature
+      user.signature_expires_at = new Date(Date.now() + 60 * 60 * 1000)
+      if (firstname) user.firstname = firstname
+      if (lastname) user.lastname = lastname
 
       await this.userRepository.save(user)
 
       const registeredUser = await this.userRepository.findOneBy({ email })
+
+      if (!registeredUser) {
+        return this.res.status(422).json({ message: "User account could not be created" })
+      }
+
+      const validationLink = `${process.env.CLIENT_APP_URL}/verify-account/${user.validation_signature}`
+
+      const mail = new Mail(
+        user.email,
+        "Email Verification",
+        EmailTemplateService.accountValidationMail(user.username, validationLink),
+        []
+      )
+
+      await this.mailer.send(mail)
+
       const { password: _, ...userWithoutPassword } = registeredUser || {}
 
-      this.res.status(201).json({ message: "User registered successfully", user: userWithoutPassword })
+      return this.res.status(201).json({ message: "User registered successfully", user: userWithoutPassword })
     } catch (error) {
       this.next(error)
     }
@@ -83,13 +109,13 @@ export class AuthController extends Controller {
       const { email, password } = this.req.body
 
       if (!email || !password) {
-        this.badRequest("Missing required fields")
+        return this.badRequest("Missing required fields")
       }
 
       const user = await this.userRepository.findOneBy({ email })
 
       if (!user || !(user && (await this.bcrypt.compare(password, user.password)))) {
-        this.unauthorized("Invalid credentials")
+        return this.unauthorized("Invalid credentials")
       }
 
       const token = this.jwt.sign({ id: user.id }, securityConfig.jwt.secret_key as string, {
@@ -108,7 +134,7 @@ export class AuthController extends Controller {
         sameSite: "Lax",
         httpOnly: true,
         secure: process.env.ENV === "production",
-        maxAge: securityConfig.jwt.token_expiration * 1000,
+        maxAge: securityConfig.jwt.token_expiration * 1000 * 4,
         partitioned: false
       })
 
@@ -119,15 +145,15 @@ export class AuthController extends Controller {
         sameSite: "Lax",
         httpOnly: true,
         secure: process.env.ENV === "production",
-        maxAge: securityConfig.jwt.refresh_token_expiration * 1000,
+        maxAge: securityConfig.jwt.refresh_token_expiration * 1000 * 4,
         partitioned: false
       })
 
       const { password: _, ...userWithoutPassword } = user
 
-      this.res
+      return this.res
         .status(200)
-        .json({ message: "User authenticated in successfully", user: userWithoutPassword, token, refreshToken })
+        .json({ message: "User authenticated successfully", user: userWithoutPassword, token, refreshToken })
     } catch (error) {
       this.next(error)
     }
@@ -140,8 +166,9 @@ export class AuthController extends Controller {
 
       if (!user) throw new UnauthorizedException()
 
-      this.res.status(200).json({
+      return this.res.status(200).json({
         id: user.id,
+        username: user.username,
         firstname: user.firstname,
         lastname: user.lastname,
         email: user.email,
@@ -185,7 +212,7 @@ export class AuthController extends Controller {
       }
 
       if (user) await this.userRepository.save(finalData)
-      this.res.status(200).json({ message: "Users updated successfully" })
+      return this.res.status(200).json({ message: "User updated successfully" })
     } catch (error) {
       this.next(error)
     }
@@ -225,7 +252,7 @@ export class AuthController extends Controller {
 
       const { password: _, ...userWithoutPassword } = user
 
-      this.res
+      return this.res
         .status(200)
         .json({ message: "User authenticated in successfully", user: userWithoutPassword, token, refreshToken })
     } catch (_refreshError) {
@@ -233,21 +260,25 @@ export class AuthController extends Controller {
     }
   }
 
-  @Post({ path: "/verify-account/:validationSignature" })
+  @Get({ path: "/verify-account/:validationSignature" })
   async verifyAccount() {
     try {
-      const { token: validation_signature } = this.req.body
-      if (!validation_signature) throw new ValidationException("Missing validation signature")
+      const validation_signature = this.req.params.validationSignature
+      if (!validation_signature) return this.badRequest("Missing validation signature")
 
       const user = await this.userRepository.findOneBy({ validation_signature })
 
-      if (!user) throw new NotFoundException("User")
+      if (!user) return this.notFound("User not found")
 
       if (!user.signature_expires_at || user.signature_expires_at < new Date()) {
-        throw new ValidationException("Validation signature expired")
+        return this.res.status(400).json({
+          error: "Validation signature expired",
+          email: user.email,
+          validation_signature
+        })
       }
 
-      await this.userRepository.update({
+      await this.userRepository.save({
         ...user,
         is_active: 1,
         is_verified: 1,
@@ -265,19 +296,19 @@ export class AuthController extends Controller {
   @Post({ path: "/resend-verification-email" })
   async resendVerificationEmail() {
     try {
-      const { token: validation_signature } = this.req.body
+      const { validation_signature } = this.req.body
 
       if (!validation_signature) {
-        throw new ValidationException("Missing validation signature")
+        return this.badRequest("Missing validation signature")
       }
 
       const user = await this.userRepository.findOneBy({ validation_signature })
 
-      if (!user) throw new NotFoundException("User")
+      if (!user) return this.notFound("User not found")
 
       const newValidationSignature = crypto.randomBytes(32).toString("hex")
 
-      await this.userRepository.update({
+      await this.userRepository.save({
         ...user,
         validation_signature: newValidationSignature,
         signature_expires_at: new Date(Date.now() + 60 * 60 * 1000)
@@ -288,7 +319,7 @@ export class AuthController extends Controller {
       const mail = new Mail(
         user.email,
         "Email Verification",
-        EmailTemplateService.accountValidationMail(user.name, validationLink),
+        EmailTemplateService.accountValidationMail(user.username, validationLink),
         []
       )
 
@@ -334,7 +365,7 @@ export class AuthController extends Controller {
       const mail = new Mail(
         user.email,
         "Reset Password",
-        EmailTemplateService.resetPasswordMail(user.name, resetPasswordLink),
+        EmailTemplateService.resetPasswordMail(user.username, resetPasswordLink),
         []
       )
 
@@ -396,7 +427,7 @@ export class AuthController extends Controller {
       const mail = new Mail(
         user.email,
         "Reset Password",
-        EmailTemplateService.resetPasswordMail(user.name, resetPasswordLink),
+        EmailTemplateService.resetPasswordMail(user.username, resetPasswordLink),
         []
       )
 
@@ -445,16 +476,20 @@ export class AuthController extends Controller {
 
   @Delete({ path: "/delete-account", middlewares: [isAuthenticated] })
   async removeUser() {
-    const user = this.req.user
+    try {
+      const user = this.req.user
 
-    if (!user) throw new UnauthorizedException()
+      if (!user) throw new UnauthorizedException()
 
-    await this.userRepository.delete(user.id)
+      await this.userRepository.delete(user.id)
 
-    this.res.clearCookie("Token")
-    const base_path = new Config().get("router.base_path")
-    this.res.clearCookie("RefreshToken", { path: `${base_path}/auth` })
+      this.res.clearCookie("Token")
+      const base_path = new Config().get("router.base_path")
+      this.res.clearCookie("RefreshToken", { path: `${base_path}/auth` })
 
-    this.res.status(200).json({ message: "User deleted successfully" })
+      return this.res.status(200).json({ message: "User deleted successfully" })
+    } catch (error) {
+      this.next(error)
+    }
   }
 }

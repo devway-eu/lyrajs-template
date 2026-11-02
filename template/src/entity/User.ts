@@ -1,5 +1,6 @@
 import { Column, Entity, Table } from "@lyra-js/core"
-import {ResetPasswordRepository} from "@repository/ResetPasswordRepository";
+
+import { ResetPasswordRepository } from "@repository/ResetPasswordRepository"
 
 @Table()
 export class User extends Entity<User> {
@@ -17,6 +18,14 @@ export class User extends Entity<User> {
   password: string = ""
   @Column({ type: "varchar", size: 255 })
   role: string = "ROLE_USER"
+  @Column({ type: "varchar", size: 255, nullable: true })
+  validation_signature: string | null = null
+  @Column({ type: "timestamp" })
+  signature_expires_at: string | Date | null = null
+  @Column({ type: "bool" })
+  is_verified: boolean = false
+  @Column({ type: "bool" })
+  is_active: boolean = false
   @Column({ type: "timestamp" })
   created_at: string | Date | null = new Date()
   @Column({ type: "timestamp" })
