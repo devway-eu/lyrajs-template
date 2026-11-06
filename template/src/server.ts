@@ -1,11 +1,12 @@
 import "reflect-metadata"
 
-import {Config, cors, createServer, isAuthenticated, LyraConsole, SecurityConfig} from "@lyra-js/core"
-import { router } from "@router/index"
+import { Config, cors, createServer, isAuthenticated, LyraConsole, SecurityConfig } from "@lyra-js/core"
 import bcrypt from "bcrypt"
 import * as dotenv from "dotenv"
 import jwt from "jsonwebtoken"
 import * as process from "node:process"
+
+import { router } from "@router/index"
 
 dotenv.config()
 
@@ -45,6 +46,10 @@ app.use(
 // Jobs are auto-discovered from src/jobs directory
 // Only schedules with enabled: true will run
 // app.enableScheduler({ timezone: "UTC" })
+
+// Enable cache manager (Redis) - uncomment to activate caching
+// Requires Redis configuration in config/redis.yaml
+// app.useCacheManager()
 
 app.serveStatic("/assets", {
   root: "public/assets"
